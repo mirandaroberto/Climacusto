@@ -1,16 +1,44 @@
-# React + Vite
+# ClimaCusto
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Calculadora de custos para profissionais e pequenas empresas de climatização.
 
-Currently, two official plugins are available:
+O ClimaCusto é uma aplicação web desenvolvida para ajudar técnicos de climatização a calcular os custos dos serviços e definir preços de venda com base nos materiais utilizados, nas despesas e na margem de lucro desejada.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## Funcionalidades
 
-## React Compiler
+- Cadastro de serviços e materiais.
+- Cálculo de custos de materiais e despesas adicionais.
+- Definição de margem de lucro.
+- Cálculo do preço sugerido para o serviço.
+- Interface simples e responsiva.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Tecnologias
 
-## Expanding the ESLint configuration
+- React
+- Vite
+- JavaScript
+- CSS
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+## Como executar o projeto
+
+1. Instale o [Node.js](https://nodejs.org/).
+2. Clone este repositório.
+3. Entre na pasta do projeto e instale as dependências:
+
+   ```bash
+   npm install
+   ```
+
+4. Inicie o servidor de desenvolvimento:
+
+   ```bash
+   npm run dev
+   ```
+
+## Status
+
+Projeto em desenvolvimento.
+
+---
+
+Desenvolvido por Roberto Miranda.

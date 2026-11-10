@@ -1,5 +1,5 @@
 
-export default function Inicio({ onCalcular, onMeusServicos }) {
+export default function Inicio({ onCalcular, onMeusServicos, onCadastrar,})  {
   return (
     <>
       <section className="opcoes">
@@ -15,6 +15,19 @@ export default function Inicio({ onCalcular, onMeusServicos }) {
           </span>
           <span className="seta">›</span>
         </button>
+
+        <button
+          className="botao-opcao"
+          type="button"
+          onClick={onCadastrar}
+        >
+          <span className="icone-opcao">＋</span>
+          <span className="texto-opcao">
+            <strong>Cadastrar serviço</strong>
+            <small>Cadastre um novo serviço e seus materiais.</small>
+          </span>
+          <span className="seta">›</span>
+      </button>
 
         <button
           className="botao-opcao"

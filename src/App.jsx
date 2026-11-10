@@ -2,6 +2,10 @@
 import { useState } from 'react'
 import './App.css'
 import Inicio from './pages/Inicio.jsx'
+import Calcular from './pages/Calcular.jsx'
+import MeusServicos from './pages/MeusServicos.jsx'
+import CadastrarServico from './pages/CadastrarServico.jsx'
+import ServicoSelecionado from './pages/ServicoSelecionado.jsx'
 
 const unidades = [
   'un',
@@ -14,10 +18,24 @@ const unidades = [
   'Outra',
 ]
 
+const unidadesDespesas = [
+  'Litro',
+  'Km',
+  'Unidade',
+  'Almoço',
+  'Refeição',
+  'Diária',
+  'Hora',
+  'Dia',
+  'Pacote',
+  'Outra',
+]
+
 function App() {
   const [tela, setTela] = useState('Inicio')
   const [servicos, setServicos] = useState([])
   const [servicoSelecionado, setServicoSelecionado] = useState(null)
+  const [materiaisCalculo, setMateriaisCalculo] = useState([])
 
   const [nomeServico, setNomeServico] = useState('')
   const [margem, setMargem] = useState('30')
@@ -27,6 +45,12 @@ function App() {
   const [outraUnidade, setOutraUnidade] = useState('')
   const [precoMaterial, setPrecoMaterial] = useState('')
   const [materiais, setMateriais] = useState([])
+  const [despesas, setDespesas] = useState([])
+  const [tipoDespesa, setTipoDespesa] = useState('Deslocamento')
+  const [descricaoDespesa, setDescricaoDespesa] = useState('')
+  const [valorDespesa, setValorDespesa] = useState('')
+  const [unidadeDespesa, setUnidadeDespesa] = useState('')
+  const [outraUnidadeDespesa, setOutraUnidadeDespesa] = useState('')
 
   function abrirCadastro() {
     setNomeServico('')
@@ -37,6 +61,10 @@ function App() {
     setOutraUnidade('')
     setPrecoMaterial('')
     setTela('cadastrar')
+    setDespesas([])
+    setTipoDespesa('Deslocamento')
+    setDescricaoDespesa('')
+    setValorDespesa('')
   }
 
   function adicionarMaterial() {
@@ -110,6 +138,7 @@ function App() {
       nome: nomeServico.trim(),
       margemPadrao: margemNumerica,
       materiais: [...materiais],
+      despesas: [...despesas],
     }
 
     setServicos([...servicos, novoServico])
@@ -117,10 +146,105 @@ function App() {
     setTela('meus-servicos')
   }
 
-  function selecionarServico(servico) {
-    setServicoSelecionado(servico)
-    setTela('servico-selecionado')
+
+function adicionarDespesaCadastro() {
+  const descricao =
+    tipoDespesa === 'Outras despesas'
+      ? descricaoDespesa.trim()
+      : tipoDespesa
+
+  if (!descricao) {
+    alert('Informe a descrição da despesa.')
+    return
   }
+
+  if (!unidadeDespesa.trim()) {
+  alert('Informe a unidade da despesa.')
+  return
+}
+
+  if (
+    valorDespesa === '' ||
+    !Number.isFinite(Number(valorDespesa)) ||
+    Number(valorDespesa) < 0
+  ) {
+    alert('Informe um preço unitário válido.')
+    return
+  }
+
+  setDespesas((despesasAtuais) => [
+    ...despesasAtuais,
+    {
+      id: `${Date.now()}-${despesasAtuais.length}`,
+      tipo: tipoDespesa,
+      descricao,
+      unidade:
+        unidadeDespesa === 'Outra'
+          ? outraUnidadeDespesa.trim()
+          : unidadeDespesa,
+      precoUnitario: Number(valorDespesa),
+    },
+  ])
+
+  setTipoDespesa('Deslocamento')
+  setDescricaoDespesa('')
+  setValorDespesa('')
+  setUnidadeDespesa('')
+  setOutraUnidadeDespesa('')
+}
+
+
+function removerDespesaCadastro(id) {
+  setDespesas((despesasAtuais) =>
+    despesasAtuais.filter((despesa) => despesa.id !== id)
+  )
+}
+
+ 
+function selecionarServico(servico) {
+  setServicoSelecionado(servico)
+
+  const materiaisIniciais = servico.materiais.map((material) => ({
+    ...material,
+    quantidade: '',
+    precoUnitario:
+      material.precoReferencia === ''
+        ? ''
+        : String(material.precoReferencia),
+    tipo: 'cadastrado',
+  }))
+
+  setMateriaisCalculo(materiaisIniciais)
+  setTela('servico-selecionado')
+}
+
+function atualizarMaterial(id, campo, valor) {
+  setMateriaisCalculo((materiaisAtuais) =>
+    materiaisAtuais.map((material) =>
+      material.id === id
+        ? { ...material, [campo]: valor }
+        : material
+    )
+  )
+}
+
+function adicionarMaterialExtra(material) {
+  setMateriaisCalculo((materiaisAtuais) => [
+    ...materiaisAtuais,
+    {
+      ...material,
+      id: `${Date.now()}-${materiaisAtuais.length}`,
+      tipo: 'extra',
+    },
+  ])
+}
+
+function removerMaterialExtra(id) {
+  setMateriaisCalculo((materiaisAtuais) =>
+    materiaisAtuais.filter((material) => material.id !== id)
+  )
+}
+
 
   function voltarInicio() {
     setServicoSelecionado(null)
@@ -138,313 +262,82 @@ function App() {
         <p>Cálculo de custos para serviços de climatização</p>
       </header>
 
-      {tela === 'Inicio' && (
+  {tela === 'Inicio' && (
   <Inicio
     onCalcular={() => setTela('calcular')}
     onMeusServicos={() => setTela('meus-servicos')}
+    onCadastrar={abrirCadastro}
   />
-)}  
+)}
+  
       {tela === 'calcular' && (
-        <section className="opcoes">
-          <h2>Qual serviço você vai calcular?</h2>
-
-          {servicos.length === 0 ? (
-            <div className="estado-vazio">
-              <span className="icone-vazio">📋</span>
-              <h3>Nenhum serviço cadastrado</h3>
-              <p>
-                Cadastre seu primeiro serviço para começar
-                a calcular os custos.
-              </p>
-            </div>
-          ) : (
-            servicos.map((servico) => (
-              <button
-                className="botao-opcao"
-                type="button"
-                key={servico.id}
-                onClick={() => selecionarServico(servico)}
-              >
-                <span className="icone-opcao">❄</span>
-                <span className="texto-opcao">
-                  <strong>{servico.nome}</strong>
-                  <small>
-                    {servico.materiais.length} material(is) cadastrado(s)
-                  </small>
-                </span>
-                <span className="seta">›</span>
-              </button>
-            ))
-          )}
-
-          <button
-            className="botao-opcao botao-principal"
-            type="button"
-            onClick={abrirCadastro}
-          >
-            <span className="texto-opcao">
-              <strong>＋ Cadastrar novo serviço</strong>
-            </span>
-            <span className="seta">›</span>
-          </button>
-
-          <button className="botao-opcao" type="button" onClick={voltarInicio}>
-            <span className="texto-opcao">
-              <strong>Voltar ao início</strong>
-            </span>
-            <span className="seta">‹</span>
-          </button>
-        </section>
-      )}
+  <Calcular
+    servicos={servicos}
+    onSelecionarServico={selecionarServico}
+    onCadastrar={abrirCadastro}
+    onVoltar={voltarInicio}
+  />
+)}
 
       {tela === 'meus-servicos' && (
-        <section className="opcoes">
-          <h2>Meus serviços</h2>
+  <MeusServicos
+    servicos={servicos}
+    onCadastrar={abrirCadastro}
+    onVoltar={voltarInicio}
+  />
+)}
 
-          {servicos.length === 0 ? (
-            <div className="estado-vazio">
-              <span className="icone-vazio">📋</span>
-              <h3>Nenhum serviço cadastrado</h3>
-              <p>
-                Cadastre seus serviços para encontrá-los aqui.
-              </p>
-            </div>
-          ) : (
-            servicos.map((servico) => (
-              <div className="botao-opcao" key={servico.id}>
-                <span className="icone-opcao">❄</span>
-                <span className="texto-opcao">
-                  <strong>{servico.nome}</strong>
-                  <small>
-                    Margem padrão: {servico.margemPadrao}%
-                    {' · '}
-                    {servico.materiais.length} material(is)
-                  </small>
-                </span>
-              </div>
-            ))
-          )}
+      
+{tela === 'cadastrar' && (
+  <CadastrarServico
+    nomeServico={nomeServico}
+    setNomeServico={setNomeServico}
+    nomeMaterial={nomeMaterial}
+    setNomeMaterial={setNomeMaterial}
+    unidadeMaterial={unidadeMaterial}
+    setUnidadeMaterial={setUnidadeMaterial}
+    outraUnidade={outraUnidade}
+    setOutraUnidade={setOutraUnidade}
+    precoMaterial={precoMaterial}
+    setPrecoMaterial={setPrecoMaterial}
+    margem={margem}
+    setMargem={setMargem}
+    unidades={unidades}
+    materiais={materiais}
+    onAdicionarMaterial={adicionarMaterial}
+    onRemoverMaterial={removerMaterial}
+    despesas={despesas}
+    tipoDespesa={tipoDespesa}
+    setTipoDespesa={setTipoDespesa}
+    descricaoDespesa={descricaoDespesa}
+    setDescricaoDespesa={setDescricaoDespesa}
+    valorDespesa={valorDespesa}
+    setValorDespesa={setValorDespesa}
+    onAdicionarDespesa={adicionarDespesaCadastro}
+    onRemoverDespesa={removerDespesaCadastro}
+    onSalvar={salvarServico}
+    onCancelar={() => setTela('meus-servicos')}
+    unidadeDespesa={unidadeDespesa}
+    setUnidadeDespesa={setUnidadeDespesa}
+    outraUnidadeDespesa={outraUnidadeDespesa}
+    unidadesDespesas={unidadesDespesas}
+    setOutraUnidadeDespesa={setOutraUnidadeDespesa}
+  />
+)}
 
-          <button
-            className="botao-opcao botao-principal"
-            type="button"
-            onClick={abrirCadastro}
-          >
-            <span className="texto-opcao">
-              <strong>＋ Cadastrar novo serviço</strong>
-            </span>
-            <span className="seta">›</span>
-          </button>
 
-          <button className="botao-opcao" type="button" onClick={voltarInicio}>
-            <span className="texto-opcao">
-              <strong>Voltar ao início</strong>
-            </span>
-            <span className="seta">‹</span>
-          </button>
-        </section>
-      )}
-
-      {tela === 'cadastrar' && (
-        <section className="opcoes">
-          <h2>Cadastrar novo serviço</h2>
-
-          <p>
-            Informe os dados do serviço e os materiais
-            que você costuma utilizar.
-          </p>
-
-          <form className="formulario" onSubmit={salvarServico}>
-            <label htmlFor="nomeServico">Nome do serviço *</label>
-            <input
-              id="nomeServico"
-              type="text"
-              value={nomeServico}
-              onChange={(event) => setNomeServico(event.target.value)}
-              placeholder="Ex.: Instalação de ar-condicionado"
-              required
-            />
-
-            <h3>Materiais de referência</h3>
-            <p className="texto-ajuda">
-              Você pode deixar o preço em branco e informá-lo
-              quando for calcular um serviço.
-            </p>
-
-            <label htmlFor="nomeMaterial">Nome do material</label>
-            <input
-              id="nomeMaterial"
-              type="text"
-              value={nomeMaterial}
-              onChange={(event) => setNomeMaterial(event.target.value)}
-              placeholder="Ex.: Tubo de cobre"
-            />
-
-            <label htmlFor="unidadeMaterial">Unidade de medida</label>
-            <select
-              id="unidadeMaterial"
-              value={unidadeMaterial}
-              onChange={(event) => setUnidadeMaterial(event.target.value)}
-            >
-              {unidades.map((unidade) => (
-                <option key={unidade} value={unidade}>
-                  {unidade}
-                </option>
-              ))}
-            </select>
-
-            {unidadeMaterial === 'Outra' && (
-              <>
-                <label htmlFor="outraUnidade">Qual unidade?</label>
-                <input
-                  id="outraUnidade"
-                  type="text"
-                  value={outraUnidade}
-                  onChange={(event) => setOutraUnidade(event.target.value)}
-                  placeholder="Informe a unidade"
-                />
-              </>
-            )}
-
-            <label htmlFor="precoMaterial">Preço de referência (R$)</label>
-            <input
-              id="precoMaterial"
-              type="number"
-              min="0"
-              step="0.01"
-              value={precoMaterial}
-              onChange={(event) => setPrecoMaterial(event.target.value)}
-              placeholder="Opcional"
-            />
-
-            <button
-              className="botao-opcao botao-principal"
-              type="button"
-              onClick={adicionarMaterial}
-            >
-              <span className="texto-opcao">
-                <strong>＋ Adicionar material</strong>
-              </span>
-            </button>
-
-            {materiais.length > 0 && (
-              <div className="lista-materiais">
-                <h3>Materiais adicionados</h3>
-
-                {materiais.map((material) => (
-                  <div className="material-item" key={material.id}>
-                    <div>
-                      <strong>{material.nome}</strong>
-                      <small>
-                        {material.unidade}
-                        {' · '}
-                        {material.precoReferencia === ''
-                          ? 'Preço não informado'
-                          : `R$ ${material.precoReferencia.toFixed(2)}`}
-                      </small>
-                    </div>
-
-                    <button
-                      className="botao-remover"
-                      type="button"
-                      onClick={() => removerMaterial(material.id)}
-                      aria-label={`Remover ${material.nome}`}
-                    >
-                      Remover
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            <label htmlFor="margem">Margem de lucro padrão (%) *</label>
-            <input
-              id="margem"
-              type="number"
-              min="1"
-              max="99"
-              step="0.01"
-              value={margem}
-              onChange={(event) => setMargem(event.target.value)}
-              required
-            />
-
-            <button className="botao-salvar" type="submit">
-              Salvar serviço
-            </button>
-
-            <button
-              className="botao-opcao"
-              type="button"
-              onClick={() => setTela('meus-servicos')}
-            >
-              <span className="texto-opcao">
-                <strong>Cancelar cadastro</strong>
-              </span>
-            </button>
-          </form>
-        </section>
-      )}
-
-      {tela === 'servico-selecionado' && servicoSelecionado && (
-        <section className="opcoes">
-          <h2>Serviço selecionado</h2>
-
-          <div className="botao-opcao">
-            <span className="icone-opcao">❄</span>
-            <span className="texto-opcao">
-              <strong>{servicoSelecionado.nome}</strong>
-              <small>
-                Margem padrão: {servicoSelecionado.margemPadrao}%
-              </small>
-            </span>
-          </div>
-
-          <h3>Materiais cadastrados</h3>
-
-          {servicoSelecionado.materiais.length === 0 ? (
-            <p>Este serviço ainda não possui materiais cadastrados.</p>
-          ) : (
-            servicoSelecionado.materiais.map((material) => (
-              <div className="material-item" key={material.id}>
-                <div>
-                  <strong>{material.nome}</strong>
-                  <small>
-                    {material.unidade}
-                    {' · '}
-                    {material.precoReferencia === ''
-                      ? 'Preço não informado'
-                      : `R$ ${material.precoReferencia.toFixed(2)}`}
-                  </small>
-                </div>
-              </div>
-            ))
-          )}
-
-          <p>
-            A próxima etapa será preencher as quantidades e os preços
-            utilizados neste cálculo.
-          </p>
-
-          <button
-            className="botao-opcao"
-            type="button"
-            onClick={() => setTela('calcular')}
-          >
-            <span className="texto-opcao">
-              <strong>Escolher outro serviço</strong>
-            </span>
-            <span className="seta">‹</span>
-          </button>
-
-          <button className="botao-opcao" type="button" onClick={voltarInicio}>
-            <span className="texto-opcao">
-              <strong>Voltar ao início</strong>
-            </span>
-            <span className="seta">‹</span>
-          </button>
-        </section>
-      )}
+{tela === 'servico-selecionado' && servicoSelecionado && (
+  <ServicoSelecionado
+    servicoSelecionado={servicoSelecionado}
+    materiaisCalculo={materiaisCalculo}
+    onAtualizarMaterial={atualizarMaterial}
+    onAdicionarMaterial={adicionarMaterialExtra}
+    onRemoverMaterial={removerMaterialExtra}
+    unidades={unidades}
+    onEscolherOutro={() => setTela('calcular')}
+    onVoltar={voltarInicio}
+  />
+)}
     </main>
   )
 }
